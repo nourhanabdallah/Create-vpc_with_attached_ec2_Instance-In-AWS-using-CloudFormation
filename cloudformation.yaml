@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates a VPC with public and private subnets and instance 
+Resources:
+  VPC: 
+    Type: AWS::EC2::VPC
+    Properties:
+      Tags: 
+        - Key: name
+          Value: vpc-cloudformation-nour
+      CidrBlock: 192.168.101.0/24
+      
+  PublicSubnetA: 
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "us-west-1c" 
+      CidrBlock: 192.168.101.0/28
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+
+  PrivateSubnetB: 
+    Type: AWS::EC2::Subnet
+    Properties: 
+      AvailabilityZone: "us-west-1a"
+      CidrBlock: 192.168.101.32/28
+      MapPublicIpOnLaunch: false
+      VpcId: !Ref VPC
+
+  MyEC2Instance: 
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - InstanceSecurityGroup
+    Properties: 
+      Tags: 
+        - Key: name
+          Value: ec2-nour-update 
+      ImageId: ami-00569e54da628d17c 
+      InstanceType: t2.micro
+      KeyName: nour-keyssh
+      SecurityGroupIds: 
+        - Ref: InstanceSecurityGroup
+      SubnetId: 
+          Ref: PublicSubnetA
+  
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access and HTTP access on the configured port
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
